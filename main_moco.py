@@ -302,7 +302,8 @@ def train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args):
     end = time.time()
     iters_per_epoch = len(train_loader)
     moco_m = args.moco_m
-    for i, (images, conds, _, _) in enumerate(train_loader):
+    for i, data in enumerate(train_loader):
+        images, conds = data['image'], data['mask']
         # measure data loading time
         data_time.update(time.time() - end)
 
