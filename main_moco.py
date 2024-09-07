@@ -118,6 +118,8 @@ parser.add_argument('--warmup-epochs', default=10, type=int, metavar='N',
 parser.add_argument('--crop-min', default=0.08, type=float,
                     help='minimum scale for random cropping (default: 0.08)')
 parser.add_argument('--name', type=str)
+parser.add_argument('--num_type', type=int, default=1)
+parser.add_argument('--abs_pos_embed', action='store_true', default=False)
 
 
 def main():
@@ -181,7 +183,8 @@ def main_worker(gpu, ngpus_per_node, args):
     print("=> creating model '{}'".format(args.arch))
     if args.arch.startswith('vit'):
         model = moco.builder.MoCo_ViT(
-            partial(vits.__dict__[args.arch], stop_grad_conv1=args.stop_grad_conv1, img_size=(256,256)),
+            partial(vits.__dict__[args.arch], stop_grad_conv1=args.stop_grad_conv1, 
+                    abs_pos_embed=args.abs_pos_embed, num_type=args.num_type, img_size=(256,256)),
             args.moco_dim, args.moco_mlp_dim, args.moco_t)
     else:
         model = moco.builder.MoCo_ResNet(
@@ -322,7 +325,7 @@ def train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args):
             loss = model(images, conds, moco_m)
 
         losses.update(loss.item(), images[0].size(0))
-        if args.rank == 0:
+        if args.rank == 0 and i % args.print_freq == 0:
             wandb_tracker.log({"loss": loss.item()}, step=epoch * iters_per_epoch + i)
 
         # compute gradient and do SGD step

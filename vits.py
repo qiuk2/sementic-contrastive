@@ -23,7 +23,7 @@ __all__ = [
 
 
 class VisionTransformerMoCo(VisionTransformer):
-    def __init__(self, stop_grad_conv1=False, **kwargs):
+    def __init__(self, stop_grad_conv1=False, abs_pos_embed=False, num_type=0, **kwargs):
         super().__init__(**kwargs)
         # Use fixed 2D sin-cos position embedding
         self.build_2d_sincos_position_embedding()
@@ -39,6 +39,11 @@ class VisionTransformerMoCo(VisionTransformer):
                     nn.init.xavier_uniform_(m.weight)
                 nn.init.zeros_(m.bias)
         nn.init.normal_(self.cls_token, std=1e-6)
+
+        self.abs_pos_embed = abs_pos_embed
+        if self.abs_pos_embed:
+            self.lvl_embed = nn.Embedding(1 + num_type, self.embed_dim)
+            nn.init.trunc_normal_(self.lvl_embed.weight.data, mean=0, std=math.sqrt(1 / self.embed_dim / 3))
 
         if isinstance(self.patch_embed, PatchEmbed):
             # xavier_uniform initialization
@@ -68,6 +73,18 @@ class VisionTransformerMoCo(VisionTransformer):
         self.pos_embed = nn.Parameter(torch.cat([pe_token, pos_emb], dim=1))
         self.pos_embed.requires_grad = False
 
+    def forward(self, x, lvl=None):
+        B = x.shape[0]
+        x = self.patch_embed(x)
+        x = self.patch_drop(x)
+
+        x = self.pos_embed(x)
+        if lvl != None and self.abs_pos_embed:
+            lvl_embed = self.lvl_embed(lvl).unsqueeze(1)
+            x = x + lvl_embed
+
+        x = self.forward_features(x)
+        return x
 
 class ConvStem(nn.Module):
     """ 
