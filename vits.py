@@ -23,12 +23,8 @@ __all__ = [
 
 
 class VisionTransformerMoCo(VisionTransformer):
-    def __init__(self, stop_grad_conv1=False, input_size=224, patch_size=16, **kwargs):
+    def __init__(self, stop_grad_conv1=False, **kwargs):
         super().__init__(**kwargs)
-        
-        # Update PatchEmbed grid size based on the new input size
-        self.patch_embed.grid_size = (input_size // patch_size, input_size // patch_size)
-        
         # Use fixed 2D sin-cos position embedding
         self.build_2d_sincos_position_embedding()
 
@@ -55,7 +51,6 @@ class VisionTransformerMoCo(VisionTransformer):
                 self.patch_embed.proj.bias.requires_grad = False
 
     def build_2d_sincos_position_embedding(self, temperature=10000.):
-        # Update grid size based on patch_embed
         h, w = self.patch_embed.grid_size
         grid_w = torch.arange(w, dtype=torch.float32)
         grid_h = torch.arange(h, dtype=torch.float32)

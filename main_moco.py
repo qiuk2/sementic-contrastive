@@ -181,7 +181,7 @@ def main_worker(gpu, ngpus_per_node, args):
     print("=> creating model '{}'".format(args.arch))
     if args.arch.startswith('vit'):
         model = moco.builder.MoCo_ViT(
-            partial(vits.__dict__[args.arch], stop_grad_conv1=args.stop_grad_conv1, input_size=256),
+            partial(vits.__dict__[args.arch], stop_grad_conv1=args.stop_grad_conv1, img_size=(256,256)),
             args.moco_dim, args.moco_mlp_dim, args.moco_t)
     else:
         model = moco.builder.MoCo_ResNet(
