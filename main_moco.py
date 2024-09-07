@@ -29,7 +29,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as torchvision_models
 import wandb
-from utils import ImagenetCDataset, ImagenetDDataset
+from utils import ImagenetCDataset, ImagenetDDataset, create_image_mask_transforms
 
 import moco.builder
 import moco.loader
@@ -255,7 +255,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     cudnn.benchmark = True
 
-    train_dataset = ImagenetDDataset(args.data, split='train')
+    train_dataset = ImagenetDDataset(args.data, split='train', transform=create_image_mask_transforms(image_size=256))
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
