@@ -322,7 +322,9 @@ def train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args):
 
         # compute output
         with torch.cuda.amp.autocast(True):
-            loss = model(images, conds, moco_m)
+            loss = model(images, conds,
+                         torch.zeros(images.shape[0], dtype=torch.int64, device=args.gpu),
+                         torch.ones(images.shape[0], dtype=torch.int64, device=args.gpu), moco_m)
 
         losses.update(loss.item(), images[0].size(0))
         if args.rank == 0 and i % args.print_freq == 0:

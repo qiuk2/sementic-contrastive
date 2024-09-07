@@ -72,7 +72,7 @@ class MoCo(nn.Module):
         labels = (torch.arange(N, dtype=torch.long) + N * torch.distributed.get_rank()).cuda()
         return nn.CrossEntropyLoss()(logits, labels) * (2 * self.T)
 
-    def forward(self, x1, x2, m):
+    def forward(self, x1, x2, l1, l2, m):
         """
         Input:
             x1: first views of images
@@ -83,15 +83,15 @@ class MoCo(nn.Module):
         """
 
         # compute features
-        q1 = self.predictor(self.base_encoder(x1))
-        q2 = self.predictor(self.base_encoder(x2))
+        q1 = self.predictor(self.base_encoder(x1, l1))
+        q2 = self.predictor(self.base_encoder(x2, l2))
 
         with torch.no_grad():  # no gradient
             self._update_momentum_encoder(m)  # update the momentum encoder
 
             # compute momentum features as targets
-            k1 = self.momentum_encoder(x1)
-            k2 = self.momentum_encoder(x2)
+            k1 = self.momentum_encoder(x1, l1)
+            k2 = self.momentum_encoder(x2, l2)
 
         return self.contrastive_loss(q1, k2) + self.contrastive_loss(q2, k1)
 

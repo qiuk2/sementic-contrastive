@@ -76,9 +76,9 @@ class VisionTransformerMoCo(VisionTransformer):
     def forward(self, x, lvl=None):
         B = x.shape[0]
         x = self.patch_embed(x)
-        x = self.patch_drop(x)
 
-        x = self.pos_embed(x)
+        x = self._pos_embed(x)
+        x = self.patch_drop(x)
         if lvl != None and self.abs_pos_embed:
             lvl_embed = self.lvl_embed(lvl).unsqueeze(1)
             x = x + lvl_embed
