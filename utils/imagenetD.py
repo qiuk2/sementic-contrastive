@@ -49,7 +49,7 @@ def find_classes(directory):
     class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
     return classes, class_to_idx
 
-class ImagenetMDataset(Dataset):
+class ImagenetDDataset(Dataset):
     def __init__(self, root: str, split: str = "train", transform=None, image_size=256,
                  separator=False, val_cond='depth', **kwargs):
 
@@ -57,8 +57,8 @@ class ImagenetMDataset(Dataset):
         self.split = split
         self.load_dataset(root)
         classes, class_to_idx = find_classes(os.path.join(root, split))
-        self.cond = {'mask': self.mask_paths}
-        self.cond_idx = {'mask': 0}
+        self.cond = {'depth': self.depth_paths}
+        self.cond_idx = {'depth': 2}
         self.class_to_idx = class_to_idx
         print('Use ImageFolder Class to IDX')
         self.image_size = image_size
@@ -71,20 +71,20 @@ class ImagenetMDataset(Dataset):
             print(f'Warning: Only use {self.val_cond} during the evaluation')
 
     def load_dataset(self, root):
-        cond_info_path = os.path.join(root, f'{self.split}_cond_info_mask.json')
+        cond_info_path = os.path.join(root, f'{self.split}_cond_info_depth.json')
 
         if os.path.exists(cond_info_path):
             print('load ImageNetC from json')
             with open(cond_info_path, 'r') as file:
                 cond_info = json.load(file)
-            self.mask_paths = cond_info['mask']
-            print('mask')
-            print(len(self.mask_paths))
+            self.depth_paths = cond_info['depth']
+            print('depth')
+            print(len(self.depth_paths))
         else:
             print('load ImageNetM from glob')
-            self.mask_paths = sorted(glob.glob(os.path.join(root, f"{self.split}_mask/" "*", "*.json")))
+            self.depth_paths = sorted(glob.glob(os.path.join(root, f"{self.split}_depth/" "*", "*.jpeg")))
             colormap = create_color_map()
-            for paths in [self.mask_paths]:
+            for paths in [self.depth_paths]:
                 with tqdm(total=len(paths)) as pbar:
                     for path in paths:
                         size = os.stat(path).st_size
@@ -102,7 +102,7 @@ class ImagenetMDataset(Dataset):
                                 print(path)
                                 paths.remove(path)
             data = {
-                'mask': self.mask_paths,
+                'depth': self.depth_paths,
             }
             with open(cond_info_path, 'w') as file:
                 json.dump(data, file)
