@@ -29,7 +29,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as torchvision_models
 from torch.utils.tensorboard import SummaryWriter
-from utils import ImagenetCDataset
+from utils import ImagenetCDataset, ImagenetMDataset
 
 import moco.builder
 import moco.loader
@@ -254,7 +254,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     cudnn.benchmark = True
 
-    train_dataset = ImagenetCDataset(args.data, split='train')
+    train_dataset = ImagenetMDataset(args.data, split='train')
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)

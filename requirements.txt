@@ -1,0 +1,5 @@
+timm=0.49
+torch
+torchvision
+wandb
+tensorboard

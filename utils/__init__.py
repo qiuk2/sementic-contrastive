@@ -1,1 +1,2 @@
-from imagenetC import ImagenetCDataset
+from .imagenetC import ImagenetCDataset
+from .imagenetM import ImagenetMDataset
