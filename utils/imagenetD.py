@@ -65,7 +65,7 @@ class ImagenetDDataset(Dataset):
         self.separator = separator
         self.colormap = create_color_map()
         print(f'ImagenetC dataset init: total images '
-              f'{max(len(self.mask_paths), len(self.canny_paths), len(self.depth_paths), len(self.normal_paths))}')
+              f'{len(self.depth_paths)}')
         if self.split == 'val':
             self.val_cond = val_cond
             print(f'Warning: Only use {self.val_cond} during the evaluation')
@@ -109,10 +109,10 @@ class ImagenetDDataset(Dataset):
 
 
     def __len__(self):
-        return max(len(self.mask_paths), len(self.canny_paths), len(self.depth_paths), len(self.normal_paths))
+        return len(self.depth_paths)
 
     def __getitem__(self, index: int):
-        cond_type = random.choices(['mask', 'canny', 'normal', 'depth'], [1, 0, 0, 0], k=1)[0]
+        cond_type = random.choices(['mask', 'canny', 'normal', 'depth'], [0, 0, 0, 1], k=1)[0]
         # TODO: add mask val dataset
         if self.split == 'val':
             cond_type = self.val_cond

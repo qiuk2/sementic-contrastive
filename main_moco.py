@@ -302,7 +302,7 @@ def train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args):
     end = time.time()
     iters_per_epoch = len(train_loader)
     moco_m = args.moco_m
-    for i, (images, _) in enumerate(train_loader):
+    for i, (images, conds, _, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -313,12 +313,12 @@ def train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args):
             moco_m = adjust_moco_momentum(epoch + i / iters_per_epoch, args)
 
         if args.gpu is not None:
-            images[0] = images[0].cuda(args.gpu, non_blocking=True)
-            images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            images = images.cuda(args.gpu, non_blocking=True)
+            conds = conds.cuda(args.gpu, non_blocking=True)
 
         # compute output
         with torch.cuda.amp.autocast(True):
-            loss = model(images[0], images[1], moco_m)
+            loss = model(images, conds, moco_m)
 
         losses.update(loss.item(), images[0].size(0))
         if args.rank == 0:
