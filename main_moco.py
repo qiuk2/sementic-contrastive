@@ -28,7 +28,7 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as torchvision_models
-from torch.utils.tensorboard import SummaryWriter
+import wandb
 from utils import ImagenetCDataset, ImagenetMDataset
 
 import moco.builder
@@ -117,6 +117,7 @@ parser.add_argument('--warmup-epochs', default=10, type=int, metavar='N',
                     help='number of warmup epochs')
 parser.add_argument('--crop-min', default=0.08, type=float,
                     help='minimum scale for random cropping (default: 0.08)')
+parser.add_argument('--name', type=str)
 
 
 def main():
@@ -231,7 +232,7 @@ def main_worker(gpu, ngpus_per_node, args):
                                 weight_decay=args.weight_decay)
         
     scaler = torch.cuda.amp.GradScaler()
-    summary_writer = SummaryWriter() if args.rank == 0 else None
+    wandb_tracker = wandb.init(project='MOCO',name=args.name) if args.rank == 0 else None
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -270,7 +271,7 @@ def main_worker(gpu, ngpus_per_node, args):
             train_sampler.set_epoch(epoch)
 
         # train for one epoch
-        train(train_loader, model, optimizer, scaler, summary_writer, epoch, args)
+        train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank == 0): # only the first GPU saves checkpoint
@@ -283,9 +284,9 @@ def main_worker(gpu, ngpus_per_node, args):
             }, is_best=False, filename='checkpoint_%04d.pth.tar' % epoch)
 
     if args.rank == 0:
-        summary_writer.close()
+        wandb.finish()
 
-def train(train_loader, model, optimizer, scaler, summary_writer, epoch, args):
+def train(train_loader, model, optimizer, scaler, wandb_tracker, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     learning_rates = AverageMeter('LR', ':.4e')
@@ -321,7 +322,7 @@ def train(train_loader, model, optimizer, scaler, summary_writer, epoch, args):
 
         losses.update(loss.item(), images[0].size(0))
         if args.rank == 0:
-            summary_writer.add_scalar("loss", loss.item(), epoch * iters_per_epoch + i)
+            wandb_tracker.log({"loss": loss.item()}, step=epoch * iters_per_epoch + i)
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
