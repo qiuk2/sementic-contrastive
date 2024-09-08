@@ -1,4 +1,4 @@
-timm=0.49
+timm=0.4.9
 torch
 torchvision
 wandb

@@ -76,15 +76,14 @@ class VisionTransformerMoCo(VisionTransformer):
     def forward(self, x, lvl=None):
         B = x.shape[0]
         x = self.patch_embed(x)
-
-        x = self._pos_embed(x)
-        x = self.patch_drop(x)
         if lvl != None and self.abs_pos_embed:
             lvl_embed = self.lvl_embed(lvl).unsqueeze(1)
             x = x + lvl_embed
-
-        x = self.forward_features(x)
-        return x
+        x = self.pos_drop(x + self.pos_embed)
+        x = self.blocks(x)
+        x = self.norm(x)
+        x = self.pre_logits(x[:, 0])
+        return self.head(x)
 
 class ConvStem(nn.Module):
     """ 
